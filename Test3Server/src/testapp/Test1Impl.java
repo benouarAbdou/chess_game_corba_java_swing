@@ -61,53 +61,51 @@ public class Test1Impl extends Test1POA {
     }
 
     @Override
-    public data movePeice(data d) {
-        Room ms = null;
-        int opponent = 0;
-        try {
-            for (Room m : matches) {
-                boolean res = m.findMe(d.id);
-                if (res = true) {
-                    ms = m;
-                    if (m.playerCouples[0] == d.id) {
-                        opponent = m.playerCouples[1];
-                    } else {
-                        opponent = m.playerCouples[0];
-                    }
-                    break;
-                }
+public data movePeice(data d) {
+    Room ms = null;
+    int opponent = 0;
+    try {
+        // Find the match room
+        for (Room m : matches) {
+            boolean res = m.findMe(d.id);
+            if (res) {
+                ms = m;
+                opponent = (m.playerCouples[0] == d.id) ? m.playerCouples[1] : m.playerCouples[0];
+                break;
             }
-
-            // System.out.println("---------------------"+ms.playerCouples[0]+"
-            // "+ms.playerCouples[1]);
-
-            if (d.mx == -1) {
-                ms.update.acquire();
-                // System.out.println(ms.lastMove[0]+" "+ms.lastMove[1]+" "+ms.lastPiece[0]+"
-                // "+ms.lastPiece[1]+" "+opponent);
-                return new data(ms.lastMove[0], ms.lastMove[1], ms.lastPiece[0], ms.lastPiece[1], opponent);
-            } else {
-
-                ms.lastMove[0] = d.mx;
-                ms.lastMove[1] = d.my;
-                ms.lastPiece[0] = d.px;
-                ms.lastPiece[1] = d.py;
-                ms.update.release();
-                sleep(50);
-                ms.update.acquire();
-                // System.out.println(ms.lastMove[0]+" "+ms.lastMove[1]+" "+ms.lastPiece[0]+"
-                // "+ms.lastPiece[1]+" "+opponent);
-
-                return new data(ms.lastMove[0], ms.lastMove[1], ms.lastPiece[0], ms.lastPiece[1], opponent);
-
-            }
-
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        return new data(9, 9, 9, 9, 9);
+        if (ms == null) {
+            System.out.println("No matching room found for player with id: " + d.id);
+            return new data(9, 9, 9, 9, 9); // Return error if no match
+        }
+
+        if (d.mx == -1) {
+            // Get last move if it's the opponent's turn
+            ms.update.acquire();
+            return new data(ms.lastMove[0], ms.lastMove[1], ms.lastPiece[0], ms.lastPiece[1], opponent);
+        } else {
+            // Update the last move and piece position
+            ms.lastMove[0] = d.mx;
+            ms.lastMove[1] = d.my;
+            ms.lastPiece[0] = d.px;
+            ms.lastPiece[1] = d.py;
+            
+            System.out.println("Player with id: " + d.id + " made a move.");
+
+            // Release for the opponent to move
+            ms.update.release();
+
+            // Don't wait here for opponent's move, just return immediately
+            return new data(ms.lastMove[0], ms.lastMove[1], ms.lastPiece[0], ms.lastPiece[1], opponent);
+        }
+    } catch (InterruptedException ex) {
+        Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
     }
+
+    return new data(9, 9, 9, 9, 9); // Return error data in case of failure
+}
+
 
     @Override
     public void shutdown() {

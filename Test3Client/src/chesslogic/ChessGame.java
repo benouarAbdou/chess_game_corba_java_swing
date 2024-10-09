@@ -168,22 +168,42 @@ public class ChessGame {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (isGameEnded)
-                    return; // Prevent any further moves
-                if (selectedPiece != null) {
-                    boolean moved = selectedPiece.move(e.getX() / 64, e.getY() / 64);
-                    if (moved) {
-                        if (selectedPiece.name == "pawn")
-                            checkPromotion(selectedPiece);
-                        isMyTurn = !isMyTurn; // Switch turns after a valid move
-                        Client.obj.movePeice(new data(selectedPiece.x,selectedPiece.y,e.getX() / 64, e.getY() / 64,Client.id));
-                        checkEndgame();
-                    }
+    if (isGameEnded) return; // Prevent any further moves if the game has ended
 
-                    selectedPiece = null;
-                }
-                frame.repaint();
+    if (selectedPiece != null) {
+        // Try to move the selected piece to the new square
+        boolean moved = selectedPiece.move(e.getX() / 64, e.getY() / 64);
+
+        if (moved) {
+            // Check for pawn promotion after moving
+            if (selectedPiece.name.equals("pawn")) {
+                checkPromotion(selectedPiece);
             }
+
+            // Switch turns after a valid move
+            isMyTurn = !isMyTurn;
+
+            // Immediately snap the piece visually to the new location
+            frame.repaint();
+
+            // Send move data to the server (but don't block or wait for opponent)
+            data d= Client.obj.movePeice(new data(selectedPiece.x, selectedPiece.y, e.getX() / 64, e.getY() / 64, Client.id));
+            
+            Piece opMove = getPiece(d.px,d.py);
+            System.out.println(d.px +" - "+ d.py);
+            System.out.println(opMove.name);
+            
+            opMove.move(d.mx/64,d.my/64);
+            System.out.println(d.mx/64 +" - "+ d.my/64);
+            
+            // Check if the game has ended
+            checkEndgame();
+        }
+
+        selectedPiece = null;
+    }
+}
+
 
             @Override
             public void mouseClicked(MouseEvent e) {
