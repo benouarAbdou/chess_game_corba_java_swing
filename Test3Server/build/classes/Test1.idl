@@ -1,0 +1,18 @@
+module testapp{
+    struct data{
+        long px;
+        long py;
+        long mx;
+        long my;
+        long id;
+    };
+    struct matchData{
+        long k;
+        long id;
+    };
+    interface Test1{
+        matchData matchMe(); 
+        data movePeice(in data d);
+        oneway void shutdown();
+        }; 
+    };
