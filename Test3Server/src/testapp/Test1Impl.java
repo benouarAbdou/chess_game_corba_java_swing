@@ -30,7 +30,7 @@ public class Test1Impl extends Test1POA {
 
     @Override
     public matchData matchMe() {
-
+        System.out.println(".....................................");
         idcounter += 1;
         int id = idcounter;
         int k = 0;
@@ -64,6 +64,7 @@ public class Test1Impl extends Test1POA {
 public data movePeice(data d) {
     Room ms = null;
     int opponent = 0;
+        System.out.println("data received"+d.id+" played "+d.px+" "+d.py+" ------>"+d.mx+" "+d.my);
     try {
         // Find the match room
         for (Room m : matches) {
@@ -80,10 +81,12 @@ public data movePeice(data d) {
             return new data(9, 9, 9, 9, 9); // Return error if no match
         }
 
-        if (d.mx == -1) {
+        if (d.px == -1) {
             // Get last move if it's the opponent's turn
             ms.update.acquire();
-            return new data(ms.lastMove[0], ms.lastMove[1], ms.lastPiece[0], ms.lastPiece[1], opponent);
+            System.out.println("data sent after "+ms.lastPiece[0]+" "+ms.lastPiece[1]+" "+ms.lastMove[0]+" "+ms.lastMove[1]);
+
+            return new data( ms.lastPiece[0], ms.lastPiece[1],ms.lastMove[0], ms.lastMove[1], opponent);
         } else {
             // Update the last move and piece position
             ms.lastMove[0] = d.mx;
@@ -95,9 +98,11 @@ public data movePeice(data d) {
 
             // Release for the opponent to move
             ms.update.release();
-
+            sleep(50);
+            ms.update.acquire();
             // Don't wait here for opponent's move, just return immediately
-            return new data(ms.lastMove[0], ms.lastMove[1], ms.lastPiece[0], ms.lastPiece[1], opponent);
+            System.out.println("data sent after "+ms.lastPiece[0]+" "+ms.lastPiece[1]+" "+ms.lastMove[0]+" "+ms.lastMove[1]);
+            return new data( ms.lastPiece[0], ms.lastPiece[1],ms.lastMove[0], ms.lastMove[1], opponent);
         }
     } catch (InterruptedException ex) {
         Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);

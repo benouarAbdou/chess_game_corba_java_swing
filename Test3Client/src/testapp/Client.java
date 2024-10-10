@@ -34,8 +34,8 @@ public class Client {
             data result = new data();
             if (res.k == 0) {
                 System.out.println("it's your opponent turn to play");
-                result = obj.movePeice(new data(-1, -1, -1, -1, id));
-                System.out.println("result === " + result.mx + "   " + result.px);
+                //result = obj.movePeice(new data(-1, -1, -1, -1, id));
+                //System.out.println("result === " + result.mx + "   " + result.px);
             }
 
             

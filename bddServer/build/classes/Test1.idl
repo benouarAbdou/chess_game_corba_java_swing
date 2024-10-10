@@ -1,0 +1,10 @@
+// Test1.idl
+module testapp {
+    interface Test1 {
+        boolean signup(in string username, in string password);
+        boolean login(in string username, in string password);
+        string getUserStats(in string username); // New method to get user stats
+        void updateUserStats(in string username, in long wins, in long draws, in long losses); // New method to update user stats
+        void shutdown();
+    };
+};

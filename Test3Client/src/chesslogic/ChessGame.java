@@ -13,6 +13,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import static java.lang.Thread.sleep;
 import java.util.LinkedList;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -33,11 +34,10 @@ public class ChessGame {
     static JFrame frame;
     static JPanel pn;
     static Image imgs[] = new Image[12];;
-
-    public static void main(String[] args) throws IOException {
-
+    static data d;
+    public static void main(String[] args) throws IOException, InterruptedException {
         BufferedImage all = ImageIO
-                .read(new File("C:\\Users\\RTX\\Desktop\\corba\\Test3Client\\src\\assets\\chess.png"));
+                .read(new File("src\\assets\\chess.png"));
         int ind = 0;
         for (int y = 0; y < 400; y += 200) {
             for (int x = 0; x < 1200; x += 200) {
@@ -133,6 +133,7 @@ public class ChessGame {
                 }
             }
         };
+ 
 
         frame.add(pn);
         pn.addMouseMotionListener(new MouseMotionListener() {
@@ -172,6 +173,8 @@ public class ChessGame {
 
     if (selectedPiece != null) {
         // Try to move the selected piece to the new square
+        int exp[]={selectedPiece.xp,selectedPiece.yp};
+        
         boolean moved = selectedPiece.move(e.getX() / 64, e.getY() / 64);
 
         if (moved) {
@@ -187,15 +190,9 @@ public class ChessGame {
             frame.repaint();
 
             // Send move data to the server (but don't block or wait for opponent)
-            data d= Client.obj.movePeice(new data(selectedPiece.x, selectedPiece.y, e.getX() / 64, e.getY() / 64, Client.id));
-            
-            Piece opMove = getPiece(d.px,d.py);
-            System.out.println(d.px +" - "+ d.py);
-            System.out.println(opMove.name);
-            
-            opMove.move(d.mx/64,d.my/64);
-            System.out.println(d.mx/64 +" - "+ d.my/64);
-            
+
+            play(new data(exp[0], exp[1], e.getX(), e.getY(), Client.id));
+            System.out.println("data has been transfered");
             // Check if the game has ended
             checkEndgame();
         }
@@ -220,6 +217,17 @@ public class ChessGame {
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
+        
+        if (Client.isWhitePlayer==true){
+            data d=new data(-1,-1,-1,-1,Client.id);
+
+            play(d);
+
+        }
+        
+        
+        
+        
     }
 
     public static Piece getPiece(int x, int y) {
@@ -386,6 +394,21 @@ public class ChessGame {
                 ind += 6;
             g.drawImage(imgs[ind], p.x, p.y, pn);
         }
+
+    }
+
+    private static void play(data dt) {
+            System.out.println("data sent "+dt.px+"  "+dt.py+" ----> "+dt.mx/64+" "+dt.my/64);
+            d=Client.obj.movePeice(dt);
+            Piece opMove = getPiece(d.px*64,d.py*64);
+            System.out.println("data returned ....................................");
+            System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
+            System.out.println("..................");
+            System.out.println("piece moved"+opMove.name);
+            opMove.move(d.mx/64,d.my/64);
+            frame.repaint();
+            
+            System.out.println("...............................................................");
 
     }
 
