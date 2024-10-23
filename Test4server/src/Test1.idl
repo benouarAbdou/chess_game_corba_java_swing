@@ -1,0 +1,26 @@
+module testapp{
+    struct data{
+        long px;
+        long py;
+        long mx;
+        long my;
+        long id;
+        long win;
+    };
+    struct matchData{
+        long k;
+        long id;
+    };
+    interface Test1{
+        matchData matchMe(); 
+        data movePeice(in data d);
+        boolean update(in long id);
+        boolean signup(in string username, in string password);
+        boolean login(in string username, in string password);
+        string getUserStats(in string username); // New method to get user stats
+        void updateUserStats(in string username, in long wins, in long draws, in long losses); // New method to update user stats
+
+        oneway void shutdown();
+        }; 
+    };
+    
