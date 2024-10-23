@@ -169,32 +169,37 @@ public data movePeice(data d) {
 
     // Load users from the CSV file into the userDB map
     private void loadUsersFromFile() {
-        File file = new File(CSV_FILE);
-        if (!file.exists()) return;
+    File file = new File(CSV_FILE);
+    if (!file.exists()) return;  // If file doesn't exist, nothing to load
 
-        try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data.length == 6) { // Check for 6 fields: id, username, password, wins, draws, losses
-                    int id = Integer.parseInt(data[0]);
-                    String username = data[1];
-                    String password = data[2];
-                    int wins = Integer.parseInt(data[3]);
-                    int draws = Integer.parseInt(data[4]);
-                    int losses = Integer.parseInt(data[5]);
+    try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
+        String line;
+        int maxId = 0;  // Track the highest user ID
+        
+        while ((line = br.readLine()) != null) {
+            String[] data = line.split(",");
+            if (data.length == 6) { // Check for 6 fields: id, username, password, wins, draws, losses
+                int id = Integer.parseInt(data[0]);
+                String username = data[1];
+                String password = data[2];
+                int wins = Integer.parseInt(data[3]);
+                int draws = Integer.parseInt(data[4]);
+                int losses = Integer.parseInt(data[5]);
 
-                    // Ensure the currentUserId is higher than the last loaded ID
-                    currentUserId = Math.max(currentUserId, id + 1);
+                // Put the user into the userDB
+                userDB.put(username, new UserStats(id, username, password, wins, draws, losses));
 
-                    // Put the user into the userDB
-                    userDB.put(username, new UserStats(id, username, password, wins, draws, losses));
-                }
+                // Keep track of the highest user ID
+                maxId = Math.max(maxId, id);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+        // Set currentUserId to be one more than the highest existing ID
+        currentUserId = maxId + 1;
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
 
     // Method to get user stats
     public String getUserStats(String username) {
