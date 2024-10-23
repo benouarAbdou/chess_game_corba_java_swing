@@ -95,7 +95,6 @@ public class MainMenuPage extends JFrame {
             JOptionPane.YES_NO_OPTION);
         
         if (confirm == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(this, "Logged out successfully!");
             new LoginSignupPage(client).setVisible(true);
             this.dispose();
         }

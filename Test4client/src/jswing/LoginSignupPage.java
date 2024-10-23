@@ -87,7 +87,6 @@ public class LoginSignupPage extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (client.obj.login(username, password)) {
-            JOptionPane.showMessageDialog(this, "Login successful!");
             new MainMenuPage(client, username).setVisible(true);
             this.dispose();
         } else {
@@ -96,13 +95,14 @@ public class LoginSignupPage extends JFrame {
     }
 
     private void signupAction() {
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
+    String username = usernameField.getText();
+    String password = new String(passwordField.getPassword());
 
-        if (client.obj.signup(username, password)) {
-            JOptionPane.showMessageDialog(this, "Signup successful!");
-        } else {
-            JOptionPane.showMessageDialog(this, "Signup failed! Username already exists.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+    if (client.obj.signup(username, password)) {
+        // Automatically log the user in after successful signup
+        loginAction();
+    } else {
+        JOptionPane.showMessageDialog(this, "Signup failed! Username already exists.", "Error", JOptionPane.ERROR_MESSAGE);
     }
+}
 }

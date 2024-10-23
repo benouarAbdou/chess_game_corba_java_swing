@@ -40,7 +40,10 @@ public class Test1Impl extends Test1POA {
 
     public void setORB(ORB orb_val) {
         orb = orb_val;
-        cc.start();
+        cc.start();       
+        loadUsersFromFile();
+
+        
     }
 
     @Override
