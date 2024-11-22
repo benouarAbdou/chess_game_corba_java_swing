@@ -6,6 +6,7 @@
 package chesslogic;
 
 import static java.lang.Thread.sleep;
+import java.time.LocalTime;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.omg.CORBA.ORB;
@@ -26,7 +27,7 @@ import testapp.Test1Helper;
 public class Update extends Thread{
     public static Test1 obj;
     static int id;
-    static boolean exit=false;
+    static boolean result, exit=false;
     public Update (int id){
         this.id=id;
     }
@@ -39,17 +40,24 @@ public class Update extends Thread{
             NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
             obj = (Test1) Test1Helper.narrow(ncRef.resolve_str("ABC"));
 
-            boolean result;
             while(!exit){
-                result=obj.update(id);
-                if(result==false){
-                    ChessGame.endGame(0);
-                }
+                Thread thread = new Thread(() -> {
+                    System.out.println("hello world");
+                    System.out.println("update at ---- "+timeStamp());
+                    result=obj.update(id);
+                    System.out.println(" return = "+result);
+                    if(result==false){
+                        System.out.println("the update is stopping the gae now");
+                        ChessGame.endGame(0);
+                    }
+                });
+                thread.start();
                 try {
-                    sleep(400);
+                    sleep(1500);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ChessGame.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                
             }
         } catch (InvalidName ex) {
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
@@ -61,7 +69,11 @@ public class Update extends Thread{
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-        
+    public static int timeStamp(){
+    LocalTime myObj = LocalTime.now();
+    String s=myObj.toString().replace(":","").replace(".", "");
+    return Integer.valueOf(s);
+    }
         
         
     public void stopp(){

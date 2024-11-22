@@ -22,7 +22,7 @@ public class LoginSignupPage extends JFrame {
     private static final Dimension COMPONENT_SIZE = new Dimension(280, 40);
     private static final int VERTICAL_SPACING = 15;
     // Validation constants
-    private static final int MIN_PASSWORD_LENGTH = 6;
+    private static final int MIN_PASSWORD_LENGTH = 1;
     
     
     public LoginSignupPage(Client client) {

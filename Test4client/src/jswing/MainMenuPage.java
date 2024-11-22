@@ -132,7 +132,7 @@ public class MainMenuPage extends JFrame {
         return button;
     }
     
-    private void startGameAction() {
+    public void startGameAction() {
     JOptionPane.showMessageDialog(this, "Game starting soon!", "Game Start", JOptionPane.INFORMATION_MESSAGE);
     matchData res = client.obj.matchMe();
     client.id = res.id;
@@ -166,7 +166,7 @@ private void launchChessGame() {
     SwingUtilities.invokeLater(() -> {
         try {
             System.out.println("Initializing ChessGame...");
-            ChessGame.main(new String[0], client);
+            ChessGame.main(new String[0], client,username);
             System.out.println("ChessGame initialized successfully.");
             // Dispose of the MainMenuPage window
             this.dispose();

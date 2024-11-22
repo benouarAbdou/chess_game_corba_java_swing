@@ -25,11 +25,11 @@ import org.omg.CORBA.ORB;
  * @author ZAHRA
  */
 public class Test1Impl extends Test1POA {
-    Semaphore access = new Semaphore(1,true);
+    public static int ServerTimer=0;
     private ORB orb;
     private int nbrPlayers = 0;
     private ArrayList<Room> matches = new ArrayList<Room>();
-    private static ArrayList<int[]> cnx=new ArrayList<int[]>();
+    private static ArrayList<cnxArray> cnx=new ArrayList<cnxArray>();
     private int temp;
     private int idcounter = 0;
     private cnxCheck cc=new cnxCheck();
@@ -40,10 +40,8 @@ public class Test1Impl extends Test1POA {
 
     public void setORB(ORB orb_val) {
         orb = orb_val;
-        cc.start();       
+        cc.start();
         loadUsersFromFile();
-
-        
     }
 
     @Override
@@ -74,9 +72,7 @@ public class Test1Impl extends Test1POA {
          * 
          * }
          */
-        int[] ar={id,timeStamp()};
-        System.out.println("arrrr ---------------------------  "+ar[0]+"  "+ar[1]);
-        cnx.add(ar);
+        cnx.add(new cnxArray(id));
         return new matchData(k, id);
 
     }
@@ -117,7 +113,7 @@ public data movePeice(data d) {
             // Release for the opponent to move
             ms.update.release();
             sleep(50);
-            if(d.win!=0){
+            if(d.win!=0 &d.win!=5 &d.win!=6 &d.win!=7 &d.win!=8 ){
                 return new data( -1,-1,-1,-1,-1,-1);
             }
             ms.update.acquire();
@@ -169,9 +165,8 @@ public data movePeice(data d) {
 
     // Load users from the CSV file into the userDB map
     private void loadUsersFromFile() {
-    File file = new File(CSV_FILE);
+        File file = new File(CSV_FILE);
     if (!file.exists()) return;  // If file doesn't exist, nothing to load
-
     try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
         String line;
         int maxId = 0;  // Track the highest user ID
@@ -185,21 +180,18 @@ public data movePeice(data d) {
                 int wins = Integer.parseInt(data[3]);
                 int draws = Integer.parseInt(data[4]);
                 int losses = Integer.parseInt(data[5]);
-
                 // Put the user into the userDB
                 userDB.put(username, new UserStats(id, username, password, wins, draws, losses));
-
                 // Keep track of the highest user ID
                 maxId = Math.max(maxId, id);
             }
         }
-
-        // Set currentUserId to be one more than the highest existing ID
+         // Set currentUserId to be one more than the highest existing ID
         currentUserId = maxId + 1;
     } catch (IOException e) {
         e.printStackTrace();
     }
-}
+    }
 
     // Method to get user stats
     public String getUserStats(String username) {
@@ -277,11 +269,6 @@ public data movePeice(data d) {
     }
     
     
-    public static int timeStamp(){
-    LocalTime myObj = LocalTime.now();
-    String s=myObj.toString().replace(":","").replace(".", "");
-    return Integer.valueOf(s);
-    }
     
     
     
@@ -295,27 +282,27 @@ public data movePeice(data d) {
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                 }
-              int time=timeStamp();
+              ServerTimer=ServerTimer+1;
              // System.out.println("time="+time);
            if(cnx.size()!=0){
             for(int i=0;i<cnx.size();i++){
-                int[] arr=cnx.get(i);
+                cnxArray arr=cnx.get(i);
                                                     try {
                     //System.out.println("                 cnxCheck.run()       " + (time-arr[1]));
-                    access.acquire();
+                    arr.access.acquire();
                                                         } catch (InterruptedException ex) {
                                                              Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                if(time-arr[1]>1000){
-                    System.out.println("------------------------------------->"+(time-arr[1]));                           
+                if(ServerTimer-arr.lastAck>2){
+                    System.out.println("------------------------------------->"+(ServerTimer-arr.lastAck));                           
 
                     try {
-                        disconnect(arr,arr[0]);
+                        disconnect(arr,arr.id,ServerTimer);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                access.release();
+                arr.access.release();
               }
             }
           }
@@ -324,34 +311,35 @@ public data movePeice(data d) {
         
         
     }
-    private void disconnect(int[]arr , int id) throws InterruptedException {
+    private void disconnect(cnxArray arr , int id,int time) throws InterruptedException {
             Room r=search(id);
             if(r!=null){
-               System.out.println("disonnect() id = "+id+"room is "+r.playerCouples[0]+" "+r.playerCouples[1]);
+               System.out.println("disonnect() id = "+id+"room is "+r.playerCouples[0]+" "+r.playerCouples[1]+" at : "+time);
                r.lastPiece[0]=-1;
                r.update.release();
                sleep(50);
                r.update.acquire();
-               cnx.remove(arr);
-               int index=Integer.valueOf(matches.indexOf(r));
+               int index=Integer.valueOf(cnx.indexOf(arr));
+               cnx.remove(index);
+                index=Integer.valueOf(matches.indexOf(r));
                 System.out.println("index = "+index);
                matches.remove(index);
             }
         }
 
     public boolean update(int id){
-        System.out.println("///////////////////////////////////////////// updaate id "+id);
+        System.out.println("///////////////////////////////////////////// updaate id "+id + " at : "+ServerTimer);
             for(int i=0;i<cnx.size();i++){
-                int[] arr=cnx.get(i);
-            if(arr[0]==id){
+                cnxArray arr=cnx.get(i);
+            if(arr.id==id){
                 
                                                         try {
-                access.acquire();
+                arr.access.acquire();
                                             } catch (InterruptedException ex) {
                                                     Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                                             }
-                arr[1]=timeStamp();
-                access.release();
+                arr.lastAck=ServerTimer;
+                arr.access.release();
                 Room h=search(id);
                 if(h==null){
                     return false;
@@ -362,11 +350,21 @@ public data movePeice(data d) {
             }
 
         }
+        System.out.println("id = "+id+" update has arrived but the room is closed !!!");
         return false;
     }
     
     
   
+}
+ class cnxArray{
+        int id,lastAck;
+        Semaphore access=new Semaphore(1); 
+        public cnxArray(int id ){
+            this.id=id;
+            lastAck=Test1Impl.ServerTimer;
+        }
+
 }
 class UserStats {
     int id;
@@ -384,5 +382,5 @@ class UserStats {
         this.draws = draws;
         this.losses = losses;
     }
-}
 
+}

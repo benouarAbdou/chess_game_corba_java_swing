@@ -22,7 +22,7 @@ import javax.swing.JPanel;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CosNaming.NamingContextPackage.CannotProceed;
 import org.omg.CosNaming.NamingContextPackage.NotFound;
-
+import jswing.Ending;
 import testapp.Client;
 import testapp.Client;
 import testapp.data;
@@ -37,14 +37,30 @@ public class ChessGame {
     public static boolean isGameEnded = false;
     static JFrame frame;
     static JPanel pn;
-    static Image imgs[] = new Image[12];;
+    static Image imgs[] = new Image[12];
+    public static int wt=2;
     static data d;
     static Update up;
     static Client client;
-    public static void main(String[] args,Client cl) throws IOException, InterruptedException, InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName {
+     static sendData sd;
+     static String username;
+    public static void wtto1(Piece piece){
+        wt=1;
+        System.out.println("\n\n\n\nwt changed\n\n\n\n");
+        System.out.println("wtto1()");
+        System.out.println("the data should be  x = "+piece.xp+"  x = "+piece.yp);
+        System.out.println("piece is a "+piece.name);
+        sd.start();
+        sd=null;
+        
+    }
+    
+    public static void main(String[] args,Client cl,String un) throws IOException, InterruptedException, InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName {
+        username=un;
         client=cl;
         System.out.println("launching hello for the client . . . . .");
         up = new Update(client.id);
+        up.setPriority(Thread.MAX_PRIORITY);
         up.start();
         BufferedImage all = ImageIO
                 .read(new File("src\\assets\\chess.png"));
@@ -195,29 +211,48 @@ public class ChessGame {
             System.out.println("moved = "+moved);
         if (moved) {
             System.out.println("6");
-            // Check for pawn promotion after moving
+            int r,temp=0;
             if (selectedPiece.name.equals("pawn")) {
-                checkPromotion(selectedPiece);
+                try {
+                    temp = checkPromotion(selectedPiece);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ChessGame.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-            System.out.println("before  "+isMyTurn);
+            System.out.println("==============================================================before  "+isMyTurn);
             // Switch turns after a valid move
             isMyTurn = !isMyTurn;
-            System.out.println("it turned into + "+isMyTurn);
+            //System.out.println("it turned into + "+isMyTurn);
+            System.out.println("name = "+selectedPiece.name);
             // Immediately snap the piece visually to the new location
             frame.repaint();
 
             // Send move data to the server (but don't block or wait for opponent)
             System.out.println("1");
-            int r=checkEndgame();
+            r=checkEndgame();
             if(r!=0){
+                System.out.println("ending game line 231");
                 endGame(r);
             }
             if(r==3){
                 r=1;
             }
-            sendData sd=new sendData(new data(exp[0], exp[1], e.getX(), e.getY(), client.id,r));
+            if(r==0){
+                r=temp;
+            }
+            System.out.println("/////////////////////////////////////////////////////////");
+            System.out.println("/////////////////////////////////////////////////////////");
+            System.out.println("xp "+selectedPiece.xp+"yp "+selectedPiece.xp);
+            Piece p=getPiece(selectedPiece.xp*64,selectedPiece.yp*64);
+            System.out.println("get piece ---- xp "+p.xp+"yp "+p.xp);
+            System.out.println("/////////////////////////////////////////////////////////");
+            System.out.println("/////////////////////////////////////////////////////////");
+            System.out.println("/////////////////////////////////////////////////////////");
+            sd =new sendData(new data(exp[0], exp[1], selectedPiece.xp*64, selectedPiece.yp*64, client.id,r));
             System.out.println("2");
-            sd.start();
+            if(wt==2){
+                sd.start();
+            }
             //System.out.println("data has been transfered");
             // Check if the game has ended
             
@@ -321,7 +356,7 @@ public class ChessGame {
         }
 
         // Determine the endgame condition
-        if (!hasValidMoves) {
+        if (!hasValidMoves) { 
             if (isInCheck) {
                 
                 System.out.println(isMyTurn ? "White is checkmated. Black wins!" : "Black is checkmated. White wins!");
@@ -351,20 +386,28 @@ public class ChessGame {
         return false; // King is not in check
     }
 
-    public static void checkPromotion(Piece piece) {
+    public static int checkPromotion(Piece piece) throws InterruptedException {
         int end = 7, py = (int) (64 * 3.5);
         if (piece.isWhite == true) {
             end = 0;
             py = 30;
         }
-
         if (piece.y / 60 == end) {
             System.out.println("here is a pawn getting promoted");
+            wt=0;
             PFrame ppn = new PFrame(piece);
-
+            System.out.println("before lock works");
+           /* while(wt==0){
+                sleep(50);
+            }*/
+            System.out.println("after lock works");
+            String pname=piece.name;
+ 
         }
+        return 0;
     }
 
+    
     public static void changePiece(Piece piece, String newp) {
         piece.name = newp;
         frame.repaint();
@@ -434,28 +477,67 @@ public class ChessGame {
          this.dt=d;
      }
      public void run(){
+         
+            if(dt.win==0 && wt==1){
+                System.out.println("-------------------------- we re in the change \n\n\n");
+                wt=2;
+                System.out.println("the data we r ending up with iss x = "+dt.mx/64+" y = "+dt.my/64);
+                Piece tempp =getPiece(dt.mx,dt.my);
+                System.out.println("name of the peice we re sending its change= "+tempp.name);
+                String pname=tempp.name;
+                if(pname=="queen"){
+                    dt.win=5;
+                }else if(pname=="bishop"){
+                    dt.win=6;
+                }else if(pname=="knight"){
+                    dt.win=7;
+                }else if(pname=="rook"){
+                    dt.win=8;
+                }
+                System.out.println("win ih here ====== "+dt.win);
+            }
+         
+         
             System.out.println("data sent "+dt.px+"  "+dt.py+" ----> "+dt.mx/64+" "+dt.my/64);
-            System.out.println(" ---------------------------------------------------------win = "+dt.win);
             d=client.obj.movePeice(dt);
-            System.out.println(" ---------------------------------------------------------win = "+d.win);
+            System.out.println("data returned ..........................................");
+            System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
             if(d.px==-1 ){
+                System.out.println("ending game line 500");
                 endGame(0);
-            }else if( d.win==1){
+            
+            }else{
+            Piece opMove = getPiece(d.px*64,d.py*64);
+            //System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
+           // System.out.println("..................");
+            System.out.println("piece moved"+opMove.name);
+            
+            opMove.move(d.mx/64,d.my/64);
+                System.out.println("changing data (win var) = "+d.win);
+            if(d.win==5){
+                System.out.println("in 5");
+                changePiece(opMove,"queen");
+            }else if(d.win==6){
+                System.out.println("in 6");
+                changePiece(opMove,"bishop");
+            }else if(d.win==7){
+                System.out.println("in 7");
+                changePiece(opMove,"knight");
+            }else if(d.win==8){
+                System.out.println("in 8");
+                changePiece(opMove,"rook");
+            }
+            else if( d.win==1){
                 endGame(1);
             }else if( d.win==2){
                 endGame(2);
-            }else{
-            Piece opMove = getPiece(d.px*64,d.py*64);
-            System.out.println("data returned ....................................");
-            System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
-            System.out.println("..................");
-            System.out.println("piece moved"+opMove.name);
-            opMove.move(d.mx/64,d.my/64);
+            }
+           System.out.println("after changing the piece received = "+opMove.name);
+
             frame.repaint();
             System.out.println("...............................................................");
-            System.out.println("my turn issss "+isMyTurn);
                 isMyTurn = !isMyTurn;
-               System.out.println("my turn now   issss "+isMyTurn);
+               System.out.println("my turn now switched to "+isMyTurn);
             }
             
      }
@@ -465,6 +547,9 @@ public class ChessGame {
         isGameEnded=true;
         up.stopp();
         System.out.println("update stopped");
+        frame.dispose();
+        new jswing.Ending(client,setting,username).setVisible(true);
+        
     }
 
 }
