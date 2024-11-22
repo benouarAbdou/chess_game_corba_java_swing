@@ -315,6 +315,23 @@ public data movePeice(data d) {
             Room r=search(id);
             if(r!=null){
                System.out.println("disonnect() id = "+id+"room is "+r.playerCouples[0]+" "+r.playerCouples[1]+" at : "+time);
+               int opponentId = (r.playerCouples[0] == id) ? r.playerCouples[1] : r.playerCouples[0];
+
+               // Find the username of the disconnected player
+                String disconnectedUsername = null;
+                for (Map.Entry<String, UserStats> entry : userDB.entrySet()) {
+                    if (entry.getValue().id == id) {
+                        disconnectedUsername = entry.getKey();
+                        break;
+                    }
+                }
+                
+                // Update user stats if username is found
+        if (disconnectedUsername != null) {
+            updateUserStats(disconnectedUsername, 0, 0, 1);
+        }
+                
+                
                r.lastPiece[0]=-1;
                r.update.release();
                sleep(50);

@@ -96,6 +96,7 @@ public class ChessGame {
         }
 
         frame = new JFrame();
+        frame.setTitle(username);
         frame.setBounds(10, 10, 530, 552);
         pn = new JPanel() {
             @Override
@@ -104,9 +105,9 @@ public class ChessGame {
                 for (int y = 0; y < 8; y++) {
                     for (int x = 0; x < 8; x++) {
                         if (white) {
-                            g.setColor(new Color(235, 235, 208));
+                            g.setColor(new Color(179, 135, 100));
                         } else {
-                            g.setColor(new Color(119, 148, 85));
+                            g.setColor(new Color(240, 216, 181));
                         }
                         /*
                          * if(y==7) {
@@ -220,6 +221,11 @@ public class ChessGame {
                 }
             }
             System.out.println("==============================================================before  "+isMyTurn);
+            
+            // Send move data to the server (but don't block or wait for opponent)
+            System.out.println("1");
+            r=checkEndgame();
+            
             // Switch turns after a valid move
             isMyTurn = !isMyTurn;
             //System.out.println("it turned into + "+isMyTurn);
@@ -227,9 +233,8 @@ public class ChessGame {
             // Immediately snap the piece visually to the new location
             frame.repaint();
 
-            // Send move data to the server (but don't block or wait for opponent)
-            System.out.println("1");
-            r=checkEndgame();
+            
+            
             if(r!=0){
                 System.out.println("ending game line 231");
                 endGame(r);
