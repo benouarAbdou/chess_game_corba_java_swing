@@ -188,7 +188,7 @@ private void launchChessGame() {
     SwingUtilities.invokeLater(() -> {
         try {
             System.out.println("Initializing ChessGame...");
-            ChessGame.main(new String[0], client,username);
+            new ChessGame(client,username);
             System.out.println("ChessGame initialized successfully.");
             // Dispose of the MainMenuPage window
             this.dispose();

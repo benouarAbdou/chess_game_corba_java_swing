@@ -138,7 +138,9 @@ public class MainMenuPage extends JFrame {
     client.id = res.id;
     if (res.k == 1) 
         client.isWhitePlayer = true;
-    
+    else
+        client.isWhitePlayer = false;
+
     System.out.println("You have been paired. Your id = " + res.id);
     launchChessGame(); // Now calls the instance method
 }
@@ -166,7 +168,7 @@ private void launchChessGame() {
     SwingUtilities.invokeLater(() -> {
         try {
             System.out.println("Initializing ChessGame...");
-            ChessGame.main(new String[0], client,username);
+            new ChessGame( client,username);
             System.out.println("ChessGame initialized successfully.");
             // Dispose of the MainMenuPage window
             this.dispose();

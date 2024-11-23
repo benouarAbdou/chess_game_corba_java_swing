@@ -18,7 +18,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.UIManager;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CosNaming.NamingContextPackage.CannotProceed;
 import org.omg.CosNaming.NamingContextPackage.NotFound;
@@ -28,22 +30,44 @@ import testapp.Client;
 import testapp.data;
 
 public class ChessGame {
+    private static final Color DARK_BACKGROUND = new Color(45, 45, 45);
+    private static final Color FIELD_BACKGROUND = new Color(60, 60, 60);
+    private static final Color GREEN_BUTTON = new Color(92, 184, 92);
+    private static final Color TEXT_COLOR = new Color(200, 200, 200);
     public static LinkedList<Piece> ps = new LinkedList<>();
-    public static Piece bking = new Piece(4, 0, false, "king", ps);
-    public static Piece wking = new Piece(4, 7, true, "king", ps);
-    public static Piece selectedPiece = null;
-    public static boolean isMyTurn = Client.isWhitePlayer;
-    public static boolean isWhitePlayer = Client.isWhitePlayer;
-    public static boolean isGameEnded = false;
+    public static Piece bking;
+    public static Piece wking;
+    public static Piece selectedPiece ;
+    public static boolean isMyTurn ;
+    public static boolean isWhitePlayer;
+    public static boolean isGameEnded;
     static JFrame frame;
     static JPanel pn;
     static Image imgs[] = new Image[12];
-    public static int wt=2;
+    public static int wt;
     static data d;
     static Update up;
     static Client client;
      static sendData sd;
      static String username;
+     static int endit;
+     
+     public ChessGame(Client cl,String un)throws IOException, InterruptedException, InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName {
+        username=un;
+        client=cl;
+         selectedPiece = null;
+          wt=2;
+         isMyTurn = client.isWhitePlayer;
+         isWhitePlayer = client.isWhitePlayer;
+         System.out.println("this rouns white ?"+isWhitePlayer);
+         isGameEnded = false;
+        up = new Update(client.id);
+        endit=0;
+        main(new String[0]);
+     }
+     
+     
+     
     public static void wtto1(Piece piece){
         wt=1;
         System.out.println("\n\n\n\nwt changed\n\n\n\n");
@@ -52,14 +76,10 @@ public class ChessGame {
         System.out.println("piece is a "+piece.name);
         sd.start();
         sd=null;
-        
     }
     
-    public static void main(String[] args,Client cl,String un) throws IOException, InterruptedException, InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName {
-        username=un;
-        client=cl;
+    public  void main(String[] args) throws IOException, InterruptedException, InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName {
         System.out.println("launching hello for the client . . . . .");
-        up = new Update(client.id);
         up.setPriority(Thread.MAX_PRIORITY);
         up.start();
         BufferedImage all = ImageIO
@@ -69,8 +89,13 @@ public class ChessGame {
             for (int x = 0; x < 1200; x += 200) {
                 imgs[ind] = all.getSubimage(x, y, 200, 200).getScaledInstance(64, 64, BufferedImage.SCALE_SMOOTH);
                 ind++;
-            }
+            }          
         }
+        ps.clear();
+        bking = new Piece(4, 0, false, "king", ps);
+        wking = new Piece(4, 7, true, "king", ps);
+
+        
         // Black pieces
         Piece brook = new Piece(0, 0, false, "rook", ps);
         Piece bknight = new Piece(1, 0, false, "knight", ps);
@@ -234,13 +259,13 @@ public class ChessGame {
             frame.repaint();
 
             
-            
-            if(r!=0){
-                System.out.println("ending game line 231");
-                endGame(r);
-            }
+
             if(r==3){
                 r=1;
+            }            
+            if(r!=0){
+                System.out.println("ending game line 231");
+                endit=r;
             }
             if(r==0){
                 r=temp;
@@ -507,12 +532,16 @@ public class ChessGame {
             d=client.obj.movePeice(dt);
             System.out.println("data returned ..........................................");
             System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
-            if(d.px==-1 ){
+            if(d.px==-1 && !isGameEnded){
                 System.out.println("ending game line 500");
                 endGame(0);
             
             }else{
+               if(!isGameEnded){
+
             Piece opMove = getPiece(d.px*64,d.py*64);
+            if(endit!=0) 
+                endGame(endit);
             //System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
            // System.out.println("..................");
             System.out.println("piece moved"+opMove.name);
@@ -544,7 +573,7 @@ public class ChessGame {
                 isMyTurn = !isMyTurn;
                System.out.println("my turn now switched to "+isMyTurn);
             }
-            
+        }    
      }
 }
     public static void endGame(int setting){
@@ -552,9 +581,27 @@ public class ChessGame {
         isGameEnded=true;
         up.stopp();
         System.out.println("update stopped");
-        frame.dispose();
-        new jswing.Ending(client,setting,username).setVisible(true);
-        
+                String s="";
+        if(setting==3){
+            client.obj.updateUserStats(username, 1, 0, 0) ;
+            s="congrats you won the game";
+        }else if(setting==0){
+            client.obj.updateUserStats(username, 1, 0, 0) ;
+            s="congrats you won the game";
+        }else if(setting==1){
+            client.obj.updateUserStats( username, 0, 0, 1) ;
+            s="you lost this game";
+        }else if(setting==2){
+            client.obj.updateUserStats( username, 0, 1, 0) ;
+            s="Stalemate! The game is a draw";
+        }
+
+        UIManager.put("OptionPane.background", DARK_BACKGROUND);
+        UIManager.put("Panel.background", DARK_BACKGROUND);
+        UIManager.put("OptionPane.messageForeground", TEXT_COLOR);
+        JOptionPane.showMessageDialog(frame, s, "game over", JOptionPane.ERROR_MESSAGE);
+        new jswing.MainMenuPage(client, username).setVisible(true);
+        frame.dispose(); 
     }
 
 }

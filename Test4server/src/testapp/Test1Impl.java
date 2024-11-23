@@ -51,6 +51,7 @@ public class Test1Impl extends Test1POA {
         int id = idcounter;
         int k = 0;
         if (nbrPlayers == 0) {
+            System.out.println("client with id = "+id+" wants to start a match it is the white");
             k = 1;
             try {
                 nbrPlayers += 1;
@@ -60,6 +61,7 @@ public class Test1Impl extends Test1POA {
                 Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
+            System.out.println("client with id = "+id+" wants to start a match it is the black");
             matches.add(new Room(id, temp));
             sem.release();
             temp = 0;
@@ -73,6 +75,12 @@ public class Test1Impl extends Test1POA {
          * }
          */
         cnx.add(new cnxArray(id));
+        System.out.println("********************************cnx array has *********************************");
+        for(int i=0;i<cnx.size();i++){
+            System.out.println("array : id = "+cnx.get(i).id + " .. "+cnx.get(i).lastAck);
+        }
+        System.out.println("*******************************************************************************");
+        System.out.println("id = "+id+" k = "+k);
         return new matchData(k, id);
 
     }
@@ -283,10 +291,14 @@ public data movePeice(data d) {
                     Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                 }
               ServerTimer=ServerTimer+1;
-             // System.out.println("time="+time);
+            System.out.println("time="+ServerTimer);
            if(cnx.size()!=0){
             for(int i=0;i<cnx.size();i++){
                 cnxArray arr=cnx.get(i);
+                if(arr==null){
+                    System.out.println("arr is null");
+                }else{
+                System.out.println("arrray being checked is id : "+arr.id);
                                                     try {
                     //System.out.println("                 cnxCheck.run()       " + (time-arr[1]));
                     arr.access.acquire();
@@ -304,6 +316,7 @@ public data movePeice(data d) {
                 }
                 arr.access.release();
               }
+             }
             }
           }
         }
@@ -341,6 +354,9 @@ public data movePeice(data d) {
                 index=Integer.valueOf(matches.indexOf(r));
                 System.out.println("index = "+index);
                matches.remove(index);
+            }else{
+               int index=Integer.valueOf(cnx.indexOf(arr));
+               cnx.remove(index);
             }
         }
 
@@ -348,6 +364,9 @@ public data movePeice(data d) {
         System.out.println("///////////////////////////////////////////// updaate id "+id + " at : "+ServerTimer);
             for(int i=0;i<cnx.size();i++){
                 cnxArray arr=cnx.get(i);
+                if(arr==null){
+                    System.out.println("while updating arr is null");
+                }
             if(arr.id==id){
                 
                                                         try {
@@ -359,6 +378,7 @@ public data movePeice(data d) {
                 arr.access.release();
                 Room h=search(id);
                 if(h==null){
+                    cnx.remove(cnx.indexOf(arr));
                     return false;
                 }else{
                     return true;
@@ -380,6 +400,7 @@ public data movePeice(data d) {
         public cnxArray(int id ){
             this.id=id;
             lastAck=Test1Impl.ServerTimer;
+            System.out.println("nx array was created > id =  "+id);
         }
 
 }

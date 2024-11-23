@@ -27,9 +27,10 @@ import testapp.Test1Helper;
 public class Update extends Thread{
     public static Test1 obj;
     static int id;
-    static boolean result, exit=false;
+    static boolean result, exit;
     public Update (int id){
         this.id=id;
+        exit=false;
     }
          
         public void run(){
@@ -39,25 +40,21 @@ public class Update extends Thread{
             org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
             NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
             obj = (Test1) Test1Helper.narrow(ncRef.resolve_str("ABC"));
-
             while(!exit){
-                Thread thread = new Thread(() -> {
-                    System.out.println("hello world");
-                    System.out.println("update at ---- "+timeStamp());
-                    result=obj.update(id);
-                    System.out.println(" return = "+result);
-                    if(result==false){
-                        System.out.println("the update is stopping the gae now");
-                        ChessGame.endGame(0);
-                    }
-                });
-                thread.start();
+                int prev=timeStamp();
+                result=obj.update(id);
+                if(result==false){
+                    System.out.println("the update is stopping the gae now");
+                    ChessGame.endGame(0);
+                }
+                int time=timeStamp();
+                if(time-prev<800){
                 try {
-                    sleep(1500);
+                    sleep(800-time+prev);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ChessGame.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+               }
             }
         } catch (InvalidName ex) {
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
