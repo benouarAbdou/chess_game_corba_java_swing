@@ -45,14 +45,14 @@ public class Test1Impl extends Test1POA {
     }
 
     @Override
-    public matchData matchMe() {
-        System.out.println(".....................................");
+    public matchData matchMe() {//launched when wanting to join a match
+        //pairs 2 playes
         idcounter += 1;
         int id = idcounter;
         int k = 0;
         if (nbrPlayers == 0) {
-            System.out.println("client with id = "+id+" wants to start a match it is the white");
             k = 1;
+            //first client joind and waiting
             try {
                 nbrPlayers += 1;
                 temp = id;
@@ -61,8 +61,9 @@ public class Test1Impl extends Test1POA {
                 Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
+            //second player joind
             System.out.println("client with id = "+id+" wants to start a match it is the black");
-            matches.add(new Room(id, temp));
+            matches.add(new Room(id, temp));//making the room
             sem.release();
             temp = 0;
             nbrPlayers = 0;
@@ -74,23 +75,15 @@ public class Test1Impl extends Test1POA {
          * 
          * }
          */
-        cnx.add(new cnxArray(id));
-        System.out.println("********************************cnx array has *********************************");
-        for(int i=0;i<cnx.size();i++){
-            System.out.println("array : id = "+cnx.get(i).id + " .. "+cnx.get(i).lastAck);
-        }
-        System.out.println("*******************************************************************************");
-        System.out.println("id = "+id+" k = "+k);
-        return new matchData(k, id);
+        cnx.add(new cnxArray(id));//creating a connection space for both new players
+        return new matchData(k, id);//retunrning  ids
 
     }
 
     @Override
 public data movePeice(data d) {
-       // System.out.println("hi-------------------------------------------------------------------");
     Room ms = null;
     int opponent = 0;
-        System.out.println("data received"+d.id+" played "+d.px+" "+d.py+" ------>"+d.mx+" "+d.my);
     try {
         
         ms = search(d.id);
@@ -98,16 +91,13 @@ public data movePeice(data d) {
             System.out.println("No matching room found for player with id: " + d.id);
             return new data(-1, -1,-1,-1,-1,0); // Return error if no match
         }
-        System.out.println("room is "+ms.playerCouples[0]+" "+ms.playerCouples[1]);
-
         opponent = (ms.playerCouples[0] == d.id) ? ms.playerCouples[1] : ms.playerCouples[0];
-        if (d.px == -1) {
-            // Get last move if it's the opponent's turn
+        if (d.px == -1) {//second player launching with no move
             ms.update.acquire();
-            if(ms.lastPiece[0]==-1){
+            if(ms.lastPiece[0]==-1){//the game ended with no moves 
                 ms.update.release();
             }
-            System.out.println("data sent after "+ms.lastPiece[0]+" "+ms.lastPiece[1]+" "+ms.lastMove[0]+" "+ms.lastMove[1]);
+            //returning the values anyway
             return new data( ms.lastPiece[0], ms.lastPiece[1],ms.lastMove[0], ms.lastMove[1], opponent,ms.win);
         } else {
             // Update the last move and piece position
@@ -116,21 +106,19 @@ public data movePeice(data d) {
             ms.lastPiece[0] = d.px;
             ms.lastPiece[1] = d.py;
             ms.win=d.win;
-            //System.out.println("Player with id: " + d.id + " made a move.");
-
-            // Release for the opponent to move
+            // Release for the opponent to move them
             ms.update.release();
             sleep(50);
+            //the move was a game ending move we return -1 to end it
             if(d.win!=0 &d.win!=5 &d.win!=6 &d.win!=7 &d.win!=8 ){
                 return new data( -1,-1,-1,-1,-1,-1);
             }
+            //waiting for the opponent turn
             ms.update.acquire();
             if(ms.lastPiece[0]==-1){
-                ms.update.release();
+                ms.update.release();//releasing if game over
             }
-            // Don't wait here for opponent's move, just return immediately
-            //System.out.println("data sent after "+ms.lastPiece[0]+" "+ms.lastPiece[1]+" "+ms.lastMove[0]+" "+ms.lastMove[1]);
-            System.out.println("-------------------------------------------------win returned = "+ms.win);
+            //returnin 
             return new data( ms.lastPiece[0], ms.lastPiece[1],ms.lastMove[0], ms.lastMove[1], opponent,ms.win);
         }
     } catch (InterruptedException ex) {
@@ -255,7 +243,7 @@ public data movePeice(data d) {
     
     
     
-    public class Room {
+    public class Room {// class of room for each 2 players
         int[] playerCouples = new int[2];
         int[] lastPiece = new int[2];
         int[] lastMove = new int[2];
@@ -281,33 +269,28 @@ public data movePeice(data d) {
     
     
     
-    public  class cnxCheck extends Thread {
+    public  class cnxCheck extends Thread { // thread function that keeps checking a player disconnected to close the room
         public void run() {
-            System.out.println("cnxCheck.run() is wornking");
           while(true){
                 try {
                     sleep(1000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                 }
-              ServerTimer=ServerTimer+1;
+              ServerTimer=ServerTimer+1;//horloge logique
             System.out.println("time="+ServerTimer);
            if(cnx.size()!=0){
-            for(int i=0;i<cnx.size();i++){
+            for(int i=0;i<cnx.size();i++){//for all te connection array checks connection
                 cnxArray arr=cnx.get(i);
                 if(arr==null){
                     System.out.println("arr is null");
                 }else{
-                System.out.println("arrray being checked is id : "+arr.id);
                                                     try {
-                    //System.out.println("                 cnxCheck.run()       " + (time-arr[1]));
-                    arr.access.acquire();
+                    arr.access.acquire();//to access the lastack value
                                                         } catch (InterruptedException ex) {
                                                              Logger.getLogger(Test1Impl.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                if(ServerTimer-arr.lastAck>2){
-                    System.out.println("------------------------------------->"+(ServerTimer-arr.lastAck));                           
-
+                if(ServerTimer-arr.lastAck>3){//if last ack was in 3s the room closes
                     try {
                         disconnect(arr,arr.id,ServerTimer);
                     } catch (InterruptedException ex) {
@@ -326,31 +309,29 @@ public data movePeice(data d) {
     }
     private void disconnect(cnxArray arr , int id,int time) throws InterruptedException {
             Room r=search(id);
+            //this function deletes the connection class of the id and the room of the id and 
+            //releases -1 to end the sent moves
             if(r!=null){
-               System.out.println("disonnect() id = "+id+"room is "+r.playerCouples[0]+" "+r.playerCouples[1]+" at : "+time);
-                
-                
-               r.lastPiece[0]=-1;
-               r.update.release();
-               sleep(50);
-               r.update.acquire();
+               int opponentId = (r.playerCouples[0] == id) ? r.playerCouples[1] : r.playerCouples[0];
                int index=Integer.valueOf(cnx.indexOf(arr));
                cnx.remove(index);
                 index=Integer.valueOf(matches.indexOf(r));
                 System.out.println("index = "+index);
                matches.remove(index);
+               r.lastPiece[0]=-1;
+               r.update.release();
+               sleep(50);
+               r.update.acquire();
             }else{
                int index=Integer.valueOf(cnx.indexOf(arr));
                cnx.remove(index);
             }
         }
 
-    public boolean update(int id){
-        System.out.println("///////////////////////////////////////////// updaate id "+id + " at : "+ServerTimer);
+    public boolean update(int id){//timestamps the player with the ack timing
             for(int i=0;i<cnx.size();i++){
                 cnxArray arr=cnx.get(i);
                 if(arr==null){
-                    System.out.println("while updating arr is null");
                 }
             if(arr.id==id){
                 

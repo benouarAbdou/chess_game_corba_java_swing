@@ -18,24 +18,19 @@ import javax.swing.JLabel;
 import javax.swing.JRootPane;
 import javax.swing.SwingConstants;
 
-
+//promotion frame
 public class PFrame extends JFrame{
 	boolean white;
 	String newp;
 	int i=0;
 	public PFrame(Piece piece){
-                System.out.println("\n\n promotion is ------------------------------on process");
-                System.out.println("1");
 		this.white=piece.isWhite;
 		this.setUndecorated(true);
 		this.getContentPane().setBackground( new Color(33, 37, 41) );
-                System.out.println("2");
-
 	    this.setVisible(true);
 	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    this.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		this.setBounds(0,0 , 600 , 300 );
-                System.out.println("3");
         setLocationRelativeTo(null);
         JButton imgs[] = new JButton[4] ;
         ImageIcon pho[]=new ImageIcon[4];
@@ -49,7 +44,7 @@ public class PFrame extends JFrame{
 		title.setForeground(Color.white);
 		this.add(title);
                 System.out.println("5");
-        for( i=1;i<5;i++) {
+        for( i=1;i<5;i++) {//displaying the pieces imgs
         	path="src\\assets\\"+i+".png";
         	pho[i-1]=new ImageIcon(path);
 			pho[i-1].setImage(pho[i-1].getImage().getScaledInstance(120, 120, Image.SCALE_DEFAULT));
@@ -65,7 +60,9 @@ public class PFrame extends JFrame{
 
 
         }
-                System.out.println("6");    		
+        
+        
+        //when clicked a piece gets chosen and returned to the board
 			imgs[0].addActionListener(e->{
 				ChessGame.changePiece(piece,"queen");
                                 System.out.println("chesslogic.PFrame"
@@ -102,7 +99,6 @@ public class PFrame extends JFrame{
                                 ChessGame.wtto1(piece);
 				this.dispose();
 				});
-                System.out.println("7");
 	}
 
 }

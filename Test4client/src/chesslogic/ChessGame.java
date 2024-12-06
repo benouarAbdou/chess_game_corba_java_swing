@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package chesslogic;
+import testapp.Update;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -68,7 +69,7 @@ public class ChessGame {
      
      
      
-    public static void wtto1(Piece piece){
+    public static void wtto1(Piece piece){//this is for the promotion frame (stoping the code till a promotion is done
         wt=1;
         System.out.println("\n\n\n\nwt changed\n\n\n\n");
         System.out.println("wtto1()");
@@ -81,7 +82,7 @@ public class ChessGame {
     public  void main(String[] args) throws IOException, InterruptedException, InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName {
         System.out.println("launching hello for the client . . . . .");
         up.setPriority(Thread.MAX_PRIORITY);
-        up.start();
+        up.start();//launching the update thread
         BufferedImage all = ImageIO
                 .read(new File("src\\assets\\chess.png"));
         int ind = 0;
@@ -90,12 +91,12 @@ public class ChessGame {
                 imgs[ind] = all.getSubimage(x, y, 200, 200).getScaledInstance(64, 64, BufferedImage.SCALE_SMOOTH);
                 ind++;
             }          
-        }
+        }//this code takes the img of all pieces and seperate them to use
         ps.clear();
         bking = new Piece(4, 0, false, "king", ps);
         wking = new Piece(4, 7, true, "king", ps);
 
-        
+        //creating all pieces
         // Black pieces
         Piece brook = new Piece(0, 0, false, "rook", ps);
         Piece bknight = new Piece(1, 0, false, "knight", ps);
@@ -123,6 +124,7 @@ public class ChessGame {
         frame = new JFrame();
         frame.setTitle(username);
         frame.setBounds(10, 10, 530, 552);
+        //drawing the board and colors
         pn = new JPanel() {
             @Override
             public void paint(Graphics g) {
@@ -144,7 +146,7 @@ public class ChessGame {
                     }
                     white = !white;
                 }
-
+                //drawing the valid moves 
                 if (selectedPiece != null) {
                     LinkedList<int[]> moves = selectedPiece.getValidMoves(false);
                     g.setColor(new Color(255, 255, 0, 128)); // Highlight valid move squares in yellow
@@ -155,7 +157,7 @@ public class ChessGame {
                         g.fillRect(move[0] * 64, move[1] * 64, 64, 64);
                     }
                 }
-
+                //drawing the imgs
                 for (Piece p : ps) {
                     int ind = 0;
                     switch (p.name.toLowerCase()) {
@@ -189,7 +191,7 @@ public class ChessGame {
         frame.add(pn);
         pn.addMouseMotionListener(new MouseMotionListener() {
             @Override
-            public void mouseDragged(MouseEvent e) {
+            public void mouseDragged(MouseEvent e) {//moving the piece if dragged
                 if (selectedPiece != null) {
                 //System.out.println("5");
                     
@@ -207,7 +209,7 @@ public class ChessGame {
 
         pn.addMouseListener(new MouseListener() {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {//selecting a piece id selected
                 System.out.println("11");
                 if (isGameEnded)
                     return; // Prevent any further moves
@@ -225,66 +227,52 @@ public class ChessGame {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+    //checking if the piece is in a valid move place . if yes the piece moves there
                 
     if (isGameEnded) return; // Prevent any further moves if the game has ended
 
     if (selectedPiece != null) {
         // Try to move the selected piece to the new square
-        int exp[]={selectedPiece.xp,selectedPiece.yp};
+        int exp[]={selectedPiece.xp,selectedPiece.yp};//the old placement
         
-        boolean moved = selectedPiece.move(e.getX() / 64, e.getY() / 64);
+        boolean moved = selectedPiece.move(e.getX() / 64, e.getY() / 64);//moving it
         frame.repaint();
-            System.out.println("moved = "+moved);
         if (moved) {
-            System.out.println("6");
             int r,temp=0;
-            if (selectedPiece.name.equals("pawn")) {
+            if (selectedPiece.name.equals("pawn")) {//checking promotion if it is a pawn 
                 try {
                     temp = checkPromotion(selectedPiece);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ChessGame.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
-            System.out.println("==============================================================before  "+isMyTurn);
-            
+            }            
             // Send move data to the server (but don't block or wait for opponent)
-            System.out.println("1");
-            r=checkEndgame();
+            r=checkEndgame();//checking if checkmate
             
             // Switch turns after a valid move
             isMyTurn = !isMyTurn;
-            //System.out.println("it turned into + "+isMyTurn);
-            System.out.println("name = "+selectedPiece.name);
-            // Immediately snap the piece visually to the new location
+            if(r==0){
+                r=checkEndgame();//checking if stalemate
+            }
+            // drawing for the new piece
             frame.repaint();
 
             
-
-            if(r==3){
-                r=1;
-            }            
-            if(r!=0){
-                System.out.println("ending game line 231");
+          
+            if(r!=0){//the game is ended (stalemate/checkmate)
                 endit=r;
             }
-            if(r==0){
-                r=temp;
-            }
-            System.out.println("/////////////////////////////////////////////////////////");
-            System.out.println("/////////////////////////////////////////////////////////");
-            System.out.println("xp "+selectedPiece.xp+"yp "+selectedPiece.xp);
+            if(r==3) r=1;//this is cuz we used the checkendgame var for the wining var 3 in checkmate means
+            //the opponent lost
+
+            if(r==0) r=temp; 
             Piece p=getPiece(selectedPiece.xp*64,selectedPiece.yp*64);
-            System.out.println("get piece ---- xp "+p.xp+"yp "+p.xp);
-            System.out.println("/////////////////////////////////////////////////////////");
-            System.out.println("/////////////////////////////////////////////////////////");
-            System.out.println("/////////////////////////////////////////////////////////");
+            //sending the data through corba
             sd =new sendData(new data(exp[0], exp[1], selectedPiece.xp*64, selectedPiece.yp*64, client.id,r));
-            System.out.println("2");
             if(wt==2){
+                //this is incase we called for promotion the code gives the frame the access to the process
                 sd.start();
             }
-            //System.out.println("data has been transfered");
-            // Check if the game has ended
             
         }
 
@@ -309,15 +297,11 @@ public class ChessGame {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
         
-        if (client.isWhitePlayer==false){
+        if (client.isWhitePlayer==false){//firs initialization to satrt the game
             sendData sd=new sendData(new data(-1,-1,-1,-1,client.id,0));
             sd.start();
-            System.out.println("after thread");
             frame.repaint();
         }
-        //update u=new update(Client.id);
-        //u.start();
-        
         
         
     }
@@ -386,10 +370,11 @@ public class ChessGame {
         }
 
         // Determine the endgame condition
-        if (!hasValidMoves) { 
+        if (!hasValidMoves) {
+            System.out.println("no valid moves");
             if (isInCheck) {
                 
-                System.out.println(isMyTurn ? "White is checkmated. Black wins!" : "Black is checkmated. White wins!");
+                System.out.println("White is checkmated. Black wins!black is checkmated. White wins!");
                 return 3;
             } else {
                 System.out.println("Stalemate! The game is a draw.");
@@ -397,6 +382,7 @@ public class ChessGame {
                 // Handle stalemate
             }
         }
+        System.out.println("no end game ");
         return 0;
     }
 
@@ -508,12 +494,9 @@ public class ChessGame {
      }
      public void run(){
          
-            if(dt.win==0 && wt==1){
-                System.out.println("-------------------------- we re in the change \n\n\n");
+            if(dt.win==0 && wt==1){ //promotion over access this part
                 wt=2;
-                System.out.println("the data we r ending up with iss x = "+dt.mx/64+" y = "+dt.my/64);
                 Piece tempp =getPiece(dt.mx,dt.my);
-                System.out.println("name of the peice we re sending its change= "+tempp.name);
                 String pname=tempp.name;
                 if(pname=="queen"){
                     dt.win=5;
@@ -524,41 +507,32 @@ public class ChessGame {
                 }else if(pname=="rook"){
                     dt.win=8;
                 }
-                System.out.println("win ih here ====== "+dt.win);
             }
          
          
-            System.out.println("data sent "+dt.px+"  "+dt.py+" ----> "+dt.mx/64+" "+dt.my/64);
-            d=client.obj.movePeice(dt);
-            System.out.println("data returned ..........................................");
-            System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
-            if(d.px==-1 && !isGameEnded){
-                System.out.println("ending game line 500");
+            d=client.obj.movePeice(dt);//sending the data and waiting for the  next move
+            if(endit!=0) {//ending the game if the last move was an ending move
+                endGame(endit);
+            }
+
+            if(d.px==-1 && !isGameEnded){//making sure the game is ended correctly if the return is -1
                 endGame(0);
             
             }else{
-               if(!isGameEnded){
+               if(!isGameEnded){//playing the move if not
 
             Piece opMove = getPiece(d.px*64,d.py*64);
-            if(endit!=0) 
-                endGame(endit);
-            //System.out.println("data received "+d.px+"  "+d.py+" ----> "+d.mx/64+" "+d.my/64);
-           // System.out.println("..................");
-            System.out.println("piece moved"+opMove.name);
             
             opMove.move(d.mx/64,d.my/64);
-                System.out.println("changing data (win var) = "+d.win);
+            //moving the piece and promoting if exists
+            frame.repaint();
             if(d.win==5){
-                System.out.println("in 5");
                 changePiece(opMove,"queen");
             }else if(d.win==6){
-                System.out.println("in 6");
                 changePiece(opMove,"bishop");
             }else if(d.win==7){
-                System.out.println("in 7");
                 changePiece(opMove,"knight");
             }else if(d.win==8){
-                System.out.println("in 8");
                 changePiece(opMove,"rook");
             }
             else if( d.win==1){
@@ -566,28 +540,23 @@ public class ChessGame {
             }else if( d.win==2){
                 endGame(2);
             }
-           System.out.println("after changing the piece received = "+opMove.name);
 
             frame.repaint();
-            System.out.println("...............................................................");
-                isMyTurn = !isMyTurn;
-               System.out.println("my turn now switched to "+isMyTurn);
+                isMyTurn = !isMyTurn;//switching turns
             }
         }    
      }
 }
-    public static void endGame(int setting){
-        System.out.println("game ended mode = "+setting);
+    public static void endGame(int setting){//the function to end the game
         isGameEnded=true;
         up.stopp();
-        System.out.println("update stopped");
                 String s="";
         if(setting==3){
             client.obj.updateUserStats(username, 1, 0, 0) ;
             s="congrats you won the game";
         }else if(setting==0){
             client.obj.updateUserStats(username, 1, 0, 0) ;
-            s="congrats you won the game";
+            s="your oponent left , you won the game";
         }else if(setting==1){
             client.obj.updateUserStats( username, 0, 0, 1) ;
             s="you lost this game";

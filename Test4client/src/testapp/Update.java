@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package chesslogic;
+package testapp;
 
+import chesslogic.ChessGame;
 import static java.lang.Thread.sleep;
 import java.time.LocalTime;
 import java.util.logging.Level;
@@ -24,7 +25,7 @@ import testapp.Test1Helper;
  *
  * @author ZAHRA
  */
-public class Update extends Thread{
+public class Update extends Thread{// sending and ack like msg to confirme that the player is still in the game
     public static Test1 obj;
     static int id;
     static boolean result, exit;
@@ -41,21 +42,13 @@ public class Update extends Thread{
             NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
             obj = (Test1) Test1Helper.narrow(ncRef.resolve_str("ABC"));
             while(!exit){
-                int prev=timeStamp();
                 result=obj.update(id);
-                System.out.println("update sent()");
                 if(result==false){
                     System.out.println("the update is stopping the gae now");
                     ChessGame.endGame(0);
                 }
-                int time=timeStamp();
-                if(time-prev<800){
-                try {
-                    sleep(800-time+prev);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(ChessGame.class.getName()).log(Level.SEVERE, null, ex);
-                }
-               }
+                    sleep(800);//get sent after every 800ms
+
             }
         } catch (InvalidName ex) {
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
@@ -65,16 +58,18 @@ public class Update extends Thread{
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
         } catch (org.omg.CosNaming.NamingContextPackage.InvalidName ex) {
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    public static int timeStamp(){
+    public static int timeStamp(){ //function that returns time in an int
     LocalTime myObj = LocalTime.now();
     String s=myObj.toString().replace(":","").replace(".", "");
     return Integer.valueOf(s);
     }
         
         
-    public void stopp(){
+    public void stopp(){//too stop running the thread
         exit=true;
         System.out.println("hello stopped");
     }
