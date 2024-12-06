@@ -122,7 +122,7 @@ public class ChessGame {
         }
 
         frame = new JFrame();
-        frame.setTitle(username);
+        frame.setTitle(username + " - " + (isWhitePlayer ? "White" : "Black"));
         frame.setBounds(10, 10, 530, 552);
         //drawing the board and colors
         pn = new JPanel() {
@@ -568,7 +568,7 @@ public class ChessGame {
         UIManager.put("OptionPane.background", DARK_BACKGROUND);
         UIManager.put("Panel.background", DARK_BACKGROUND);
         UIManager.put("OptionPane.messageForeground", TEXT_COLOR);
-        JOptionPane.showMessageDialog(frame, s, "game over", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(frame, s, "game over", JOptionPane.INFORMATION_MESSAGE);
         new jswing.MainMenuPage(client, username).setVisible(true);
         frame.dispose(); 
     }
